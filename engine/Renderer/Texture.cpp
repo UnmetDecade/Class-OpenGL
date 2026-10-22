@@ -1,0 +1,98 @@
+#include "engine/Renderer/Texture.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
+#include <stdexcept>
+#include <utility>
+
+#include "engine/Core/GLCall.h"
+
+Texture::Texture(const std::string& path)
+{
+    stbi_set_flip_vertically_on_load(1);
+
+    unsigned char* data = stbi_load(path.c_str(), &m_Width, &m_Height, &m_Channels, 0);
+    if (data == nullptr)
+    {
+        throw std::runtime_error("Failed to load texture: " + path + " (" + stbi_failure_reason() + ")");
+    }
+
+    const GLenum format = (m_Channels == 4) ? GL_RGBA : GL_RGB;
+
+    GLCall(glGenTextures(1, &m_ID));
+    GLCall(glBindTexture(GL_TEXTURE_2D, m_ID));
+
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+    GLCall(glTexImage2D(GL_TEXTURE_2D,
+                        0,
+                        format,
+                        m_Width,
+                        m_Height,
+                        0,
+                        format,
+                        GL_UNSIGNED_BYTE,
+                        data));
+    GLCall(glGenerateMipmap(GL_TEXTURE_2D));
+
+    GLCall(glBindTexture(GL_TEXTURE_2D, 0));
+    stbi_image_free(data);
+}
+
+Texture::~Texture()
+{
+    if (m_ID != 0)
+    {
+        GLCall(glDeleteTextures(1, &m_ID));
+        m_ID = 0;
+    }
+}
+
+Texture::Texture(Texture&& other) noexcept
+    : m_ID(other.m_ID),
+      m_Width(other.m_Width),
+      m_Height(other.m_Height),
+      m_Channels(other.m_Channels)
+{
+    other.m_ID = 0;
+    other.m_Width = 0;
+    other.m_Height = 0;
+    other.m_Channels = 0;
+}
+
+Texture& Texture::operator=(Texture&& other) noexcept
+{
+    if (this != &other)
+    {
+        if (m_ID != 0)
+        {
+            GLCall(glDeleteTextures(1, &m_ID));
+        }
+
+        m_ID = other.m_ID;
+        m_Width = other.m_Width;
+        m_Height = other.m_Height;
+        m_Channels = other.m_Channels;
+
+        other.m_ID = 0;
+        other.m_Width = 0;
+        other.m_Height = 0;
+        other.m_Channels = 0;
+    }
+    return *this;
+}
+
+void Texture::Bind(unsigned int slot) const
+{
+    GLCall(glActiveTexture(GL_TEXTURE0 + slot));
+    GLCall(glBindTexture(GL_TEXTURE_2D, m_ID));
+}
+
+void Texture::Unbind() const
+{
+    GLCall(glBindTexture(GL_TEXTURE_2D, 0));
+}

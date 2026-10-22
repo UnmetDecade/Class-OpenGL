@@ -1,0 +1,101 @@
+cmake_minimum_required(VERSION 3.16)
+project(ClassOpenGL LANGUAGES C CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
+
+# ---------------------------------------------------------------------------
+# GLFW (FetchContent)
+# ---------------------------------------------------------------------------
+include(FetchContent)
+
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG        3.4
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(glfw)
+
+# ---------------------------------------------------------------------------
+# glm (FetchContent)
+# ---------------------------------------------------------------------------
+set(GLM_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG        1.0.1
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(glm)
+
+# ---------------------------------------------------------------------------
+# glad (pre-generated OpenGL 3.3 core loader)
+# ---------------------------------------------------------------------------
+add_library(glad STATIC third_party/glad/src/glad.c)
+target_include_directories(glad PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/third_party/glad/include)
+
+# ---------------------------------------------------------------------------
+# engine
+# ---------------------------------------------------------------------------
+add_library(engine STATIC
+    engine/Window/Window.cpp
+    engine/Renderer/Shader.cpp
+    engine/Renderer/Buffer.cpp
+    engine/Renderer/VertexArray.cpp
+    engine/Renderer/Texture.cpp
+    engine/Renderer/Camera.cpp
+    engine/Renderer/Renderer.cpp
+    engine/Renderer/ShaderLibrary.cpp
+    engine/Renderer/RenderCommand.cpp
+    engine/Renderer/OpenGLRendererAPI.cpp
+    engine/Renderer/NullRendererAPI.cpp
+    engine/Renderer/Mesh.cpp
+    engine/Renderer/Model.cpp
+    engine/Renderer/TextRenderer.cpp
+)
+target_include_directories(engine
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb
+)
+target_link_libraries(engine PUBLIC glad glfw glm::glm)
+target_compile_definitions(engine
+    PUBLIC $<$<CONFIG:Debug>:DEBUG>
+    PUBLIC ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets"
+)
+
+# ---------------------------------------------------------------------------
+# examples
+# ---------------------------------------------------------------------------
+add_executable(01_triangle engine/examples/01_triangle/main.cpp)
+target_link_libraries(01_triangle PRIVATE engine)
+
+add_executable(02_texture engine/examples/02_texture/main.cpp)
+target_link_libraries(02_texture PRIVATE engine)
+
+add_executable(03_cube engine/examples/03_cube/main.cpp)
+target_link_libraries(03_cube PRIVATE engine)
+
+add_executable(04_shader_library engine/examples/04_shader_library/main.cpp)
+target_link_libraries(04_shader_library PRIVATE engine)
+
+add_executable(05_lighting engine/examples/05_lighting/main.cpp)
+target_link_libraries(05_lighting PRIVATE engine)
+
+add_executable(06_text engine/examples/06_text/main.cpp)
+target_link_libraries(06_text PRIVATE engine)
+
+add_executable(07_backend_switch engine/examples/07_backend_switch/main.cpp)
+target_link_libraries(07_backend_switch PRIVATE engine)
