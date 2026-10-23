@@ -19,6 +19,11 @@ Texture::Texture(const std::string& path)
     }
 
     const GLenum format = (m_Channels == 4) ? GL_RGBA : GL_RGB;
+    // Image files are authored in sRGB. The sRGB internal formats make the
+    // GPU convert sRGB -> linear on sampling, so all lighting math happens in
+    // linear space; the inverse conversion happens once in the final output
+    // pass (see hdr_output.frag).
+    const GLenum internalFormat = (m_Channels == 4) ? GL_SRGB8_ALPHA8 : GL_SRGB8;
 
     GLCall(glGenTextures(1, &m_ID));
     GLCall(glBindTexture(GL_TEXTURE_2D, m_ID));
@@ -30,7 +35,7 @@ Texture::Texture(const std::string& path)
 
     GLCall(glTexImage2D(GL_TEXTURE_2D,
                         0,
-                        format,
+                        internalFormat,
                         m_Width,
                         m_Height,
                         0,

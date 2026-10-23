@@ -65,6 +65,10 @@ add_library(engine STATIC
     engine/Renderer/Mesh.cpp
     engine/Renderer/Model.cpp
     engine/Renderer/TextRenderer.cpp
+    engine/Renderer/Framebuffer.cpp
+    engine/Renderer/PostProcess.cpp
+    engine/Renderer/ShadowMap.cpp
+    engine/Renderer/Cubemap.cpp
 )
 target_include_directories(engine
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
@@ -99,3 +103,18 @@ target_link_libraries(06_text PRIVATE engine)
 
 add_executable(07_backend_switch engine/examples/07_backend_switch/main.cpp)
 target_link_libraries(07_backend_switch PRIVATE engine)
+
+add_executable(08_postprocess engine/examples/08_postprocess/main.cpp)
+target_link_libraries(08_postprocess PRIVATE engine)
+
+add_executable(09_shadow engine/examples/09_shadow/main.cpp)
+target_link_libraries(09_shadow PRIVATE engine)
+
+add_executable(10_skybox engine/examples/10_skybox/main.cpp)
+target_link_libraries(10_skybox PRIVATE engine)
+
+add_executable(11_hdr engine/examples/11_hdr/main.cpp)
+target_link_libraries(11_hdr PRIVATE engine)
+
+add_executable(12_pbr engine/examples/12_pbr/main.cpp)
+target_link_libraries(12_pbr PRIVATE engine)
