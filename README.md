@@ -1,73 +1,79 @@
-# Class-OpenGL：现代 OpenGL C++ 封装引擎
+# Class-OpenGL: A Modern OpenGL C++ Wrapper Engine
+
+<div align="left"><b>English</b> · <a href="README.zh-CN.md">简体中文</a></div>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-一个 C++17 / OpenGL 3.3 Core Profile 的渲染引擎封装骨架。
-所有 GL 资源（program / buffer / VAO / texture / framebuffer）均由 RAII 类管理，拷贝被禁用、移动被保留；
-所有 GL 调用经 `GLCall` 包裹，Debug 下出错立即打印 `文件:行号 调用语句 错误码` 并中断。
+A rendering engine skeleton built around C++17 and OpenGL 3.3 Core Profile.
+Every GL resource (program / buffer / VAO / texture / framebuffer) is managed by an RAII class, with copying disabled and moving enabled;
+every GL call is wrapped in `GLCall`, which in Debug builds prints `file:line call error code` and breaks immediately on failure.
 
-## 示例截图
+## Screenshots
 
-> 以下截图在 macOS / Apple M4 上以 4x MSAA 运行捕获。
+> Captured on macOS / Apple M4 with 4x MSAA.
 
-**03_cube — 纹理立方体、深度测试与自由相机**
+**03_cube — textured cube, depth testing and a free camera**
 
 ![03_cube](docs/images/03_cube.png)
 
-**05_lighting — OBJ 模型、材质、方向光 + 点光源与 Blinn-Phong 光照**
+**05_lighting — OBJ model, materials, directional + point lights with Blinn-Phong shading**
 
 ![05_lighting](docs/images/05_lighting.png)
 
-**06_text — 实时文字叠加层：FPS、分辨率、MSAA 与当前渲染后端**
+**06_text — real-time text overlay: FPS, resolution, MSAA and current render backend**
 
 ![06_text](docs/images/06_text.png)
 
-**08_postprocess — 离屏场景 + 可组合后处理链（图为 Edge 效果）**
+**08_postprocess — offscreen scene + composable post-processing chain (Edge effect shown)**
 
 ![08_postprocess](docs/images/08_postprocess.png)
 
-**09_shadow — 方向光阴影贴图 + PCF 软阴影**
+**09_shadow — directional light shadow map + PCF soft shadows**
 
 ![09_shadow](docs/images/09_shadow.png)
 
-**10_skybox — 立方体贴图天空盒与环境反射**
+**10_skybox — cubemap skybox with environment reflections**
 
 ![10_skybox](docs/images/10_skybox.png)
 
-**11_hdr — RGBA16F HDR 场景、Reinhard 色调映射与 Bloom**
+**11_hdr — RGBA16F HDR scene, Reinhard tone mapping and bloom**
 
 ![11_hdr](docs/images/11_hdr.png)
 
-**12_pbr — Cook-Torrance PBR：7×5 metallic / roughness 球阵 + 多光源**
+**12_pbr — Cook-Torrance PBR: 7×5 metallic / roughness sphere grid + multiple lights**
 
 ![12_pbr](docs/images/12_pbr.png)
 
-## 功能概览
+**13_rose — procedural rose: 48 golden-angle spiral petals (thin-shell geometry), sepals/stem/leaves/thorns, directional shadows and ACES tone mapping**
 
-| 模块 | 文件 | 说明 |
+![13_rose](docs/images/13_rose.png)
+
+## Feature Overview
+
+| Module | Files | Description |
 |---|---|---|
-| 窗口 | `engine/Window/Window.*` | GLFW 窗口/上下文、回调、VSync、MSAA |
-| 错误检查 | `engine/Core/GLCall.h` | Debug 下包裹全部 GL 调用 |
-| 着色器 | `engine/Renderer/Shader.*` | 文件/源码构造、编译链接报错、uniform 缓存 |
-| 缓冲/VAO | `Buffer.*`、`VertexArray.*` | VBO/EBO/VAO 的 RAII 封装 |
-| 纹理 | `Texture.*` | stb_image、自动 RGB/RGBA、mipmap、Y 翻转、sRGB 内部格式 |
-| 立方体贴图 | `Cubemap.*` | 六面图上传、sRGB 内部格式、`Bind/Unbind` |
-| 相机 | `Camera.*` | yaw/pitch、WASD、Q/E 升降、滚轮缩放 |
-| 渲染命令 | `Renderer.*`、`RenderCommand.*` | 运行时多后端分发、绘制统计 |
-| 后端 | `RendererAPI.h`、`OpenGLRendererAPI.*`、`NullRendererAPI.*` | OpenGL 实际后端 + Null 无头后端 |
-| 光照/材质 | `Lighting.h` | Blinn-Phong、Material、方向光、点光 |
-| PBR 材质 | `MaterialPBR.h` | albedo / metallic / roughness / AO，`Apply(Shader&)` |
-| 网格/模型 | `Mesh.*`、`Model.*` | 索引网格、Wavefront OBJ 导入、UV 球体生成 |
-| 文字 | `TextRenderer.*` | stb_easy_font 屏幕空间 ASCII 叠加层 |
-| Shader 库 | `ShaderLibrary.*` | 单文件 `#type vertex` / `#type fragment` 管理 |
-| 离屏渲染 | `Framebuffer.*` | 颜色附件 + 深度/模板 renderbuffer，支持 RGB8 / sRGB8 / RGBA16F |
-| 后处理 | `PostProcess.*`、`PostEffect.h` | 场景 FBO、ping-pong 链、效果启用/排序、输出变换 |
-| 阴影贴图 | `ShadowMap.*` | 2048² 深度 FBO、正交光空间矩阵、PCF 与 bias |
-| HDR / Bloom | `hdr_output.frag`、`hdr_bright.frag`、`hdr_blur.frag` | RGBA16F、Reinhard、半分辨率可分离高斯 Bloom |
-| PBR 着色 | `pbr.vert`、`pbr.frag` | Cook-Torrance GGX / Smith / Schlick，多光源，漫反射 IBL |
-| 天空盒 | `skybox.vert`、`skybox.frag`、`lighting_shadow_reflect.frag` | 环境贴图、反射/折射、可选辐照度环境光 |
+| Window | `engine/Window/Window.*` | GLFW window/context, callbacks, VSync, MSAA |
+| Error checking | `engine/Core/GLCall.h` | Wraps every GL call in Debug builds |
+| Shaders | `engine/Renderer/Shader.*` | Construct from file/source, compile/link error reporting, uniform cache |
+| Buffers/VAO | `Buffer.*`, `VertexArray.*` | RAII wrappers for VBO/EBO/VAO |
+| Textures | `Texture.*` | stb_image, automatic RGB/RGBA, mipmaps, Y flip, sRGB internal formats |
+| Cubemaps | `Cubemap.*` | Six-face upload, sRGB internal format, `Bind/Unbind` |
+| Camera | `Camera.*` | yaw/pitch, WASD, Q/E up/down, scroll zoom |
+| Render commands | `Renderer.*`, `RenderCommand.*` | Runtime multi-backend dispatch, draw statistics |
+| Backends | `RendererAPI.h`, `OpenGLRendererAPI.*`, `NullRendererAPI.*` | Real OpenGL backend + headless Null backend |
+| Lighting/materials | `Lighting.h` | Blinn-Phong, Material, directional light, point light |
+| PBR materials | `MaterialPBR.h` | albedo / metallic / roughness / AO, `Apply(Shader&)` |
+| Mesh/model | `Mesh.*`, `Model.*` | Indexed meshes, Wavefront OBJ import, UV sphere generation |
+| Text | `TextRenderer.*` | stb_easy_font screen-space ASCII overlay |
+| Shader library | `ShaderLibrary.*` | Single-file `#type vertex` / `#type fragment` management |
+| Offscreen rendering | `Framebuffer.*` | Color attachment + depth/stencil renderbuffer, supports RGB8 / sRGB8 / RGBA16F |
+| Post-processing | `PostProcess.*`, `PostEffect.h` | Scene FBO, ping-pong chain, effect enable/ordering, output transform |
+| Shadow maps | `ShadowMap.*` | 2048² depth FBO, orthographic light-space matrix, PCF and bias |
+| HDR / Bloom | `hdr_output.frag`, `hdr_bright.frag`, `hdr_blur.frag` | RGBA16F, Reinhard, half-resolution separable Gaussian bloom |
+| PBR shading | `pbr.vert`, `pbr.frag` | Cook-Torrance GGX / Smith / Schlick, multiple lights, diffuse IBL |
+| Skybox | `skybox.vert`, `skybox.frag`, `lighting_shadow_reflect.frag` | Environment maps, reflection/refraction, optional irradiance ambient light |
 
-## 项目结构
+## Project Structure
 
 ```text
 Class-OpenGL/
@@ -75,25 +81,25 @@ Class-OpenGL/
 ├── ARCHITECTURE.md
 ├── engine/
 │   ├── Core/              # Log / GLCall
-│   ├── Window/            # GLFW 窗口与输入封装
+│   ├── Window/            # GLFW window and input wrappers
 │   ├── Renderer/          # Shader / Buffer / VAO / Texture / Cubemap / Framebuffer
 │   │                      # PostProcess / ShadowMap / Camera / Lighting / PBR ...
-│   └── examples/          # 01_triangle ... 12_pbr
+│   └── examples/          # 01_triangle ... 13_rose
 ├── assets/
-│   ├── shaders/           # GLSL 与 .glsl 单文件 shader
+│   ├── shaders/           # GLSL and single-file .glsl shaders
 │   ├── models/            # torus.obj
-│   ├── textures/          # skybox / irradiance 立方体贴图六面
-│   └── *.png / *.jpg      # 测试纹理
+│   ├── textures/          # skybox / irradiance cubemap faces
+│   └── *.png / *.jpg      # test textures
 ├── third_party/
-│   ├── glad/              # 预生成的 OpenGL 3.3 Core loader
+│   ├── glad/              # pre-generated OpenGL 3.3 Core loader
 │   └── stb/               # stb_image / stb_easy_font
-└── docs/images/           # README 截图
+└── docs/images/           # README screenshots
 ```
 
-## 构建
+## Building
 
-依赖：CMake ≥ 3.16、C++17 编译器。GLFW 与 glm 通过 FetchContent 获取；
-glad 与 stb 已放在 `third_party/`，无需联网生成。
+Dependencies: CMake ≥ 3.16 and a C++17 compiler. GLFW and glm are fetched via FetchContent;
+glad and stb are already vendored in `third_party/`, so no network generation step is needed.
 
 ```bash
 git clone https://github.com/UnmetDecade/Class-OpenGL.git
@@ -102,33 +108,34 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build -j
 ```
 
-Release 构建（关闭 GLCall 检查）：
+Release build (with GLCall checks disabled):
 
 ```bash
 cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
 cmake --build build-release -j
 ```
 
-资源目录通过编译定义 `ASSET_DIR` 指向项目的 `assets/`，无需复制可执行文件。
+The asset directory is pointed at the project's `assets/` through the `ASSET_DIR` compile definition, so the executable never needs to be copied next to its assets.
 
-## 示例
+## Examples
 
-| 可执行文件 | 内容 | 操作 |
+| Executable | What it shows | Controls |
 |---|---|---|
-| `01_triangle` | 硬编码 GLSL 三角形，颜色随时间插值 | ESC 退出 |
-| `02_texture` | EBO 矩形 + container 贴图 | ESC 退出 |
-| `03_cube` | 旋转纹理立方体、深度测试 | WASD、Q/E、鼠标、滚轮、ESC |
-| `04_shader_library` | ShaderLibrary + RenderCommand | ESC 退出 |
-| `05_lighting` | OBJ torus、棋盘贴图、Material、方向光 + 点光、MSAA | WASD、Q/E、鼠标、滚轮、ESC |
-| `06_text` | 3D 场景 + 实时文字叠加层（FPS/分辨率/MSAA/后端） | WASD、Q/E、鼠标、滚轮、T 隐藏文字、ESC |
-| `07_backend_switch` | 运行时 OpenGL ↔ Null 后端切换与绘制统计 | B 切换后端、P 打印统计、ESC 退出 |
-| `08_postprocess` | 场景渲染到离屏 FBO，经 Gray / Invert / Blur / Edge 后处理链，再由 `hdr_output.frag` 做最终输出 | 1 无 / 2 Gray / 3 Invert / 4 Edge / 5 Blur / 6 Gray+Edge、WASD/QE、鼠标、ESC |
-| `09_shadow` | 方向光阴影贴图（正交光空间、PCF 3×3、bias 缩放），场景先写入离屏 FBO 再统一输出 | WASD/QE、鼠标、滚轮、`[` `]` bias、F6 PCF、ESC |
-| `10_skybox` | 立方体贴图天空盒 + 环境反射/折射 + 方向光阴影，最终经 `hdr_output.frag` 输出 | WASD/QE、鼠标、1–6 后处理、F6 PCF、F7 折射、`-` `=` 反射率、ESC |
-| `11_hdr` | RGBA16F 场景、Reinhard 色调映射、半分辨率 Bloom，可切换 HDR/LDR | F8 HDR/LDR、F9 Bloom、1–6 后处理、F6 PCF、F7 折射、`[` `]`、ESC |
-| `12_pbr` | Cook-Torrance PBR，1 方向光 + 4 点光，7×5 metallic/roughness 球阵，漫反射 IBL | 1–6 后处理、L Lambert-only、F6 点光旋转暂停、F7 IBL、F8 HDR/LDR、F9 Bloom、`[` `]` bias、ESC |
+| `01_triangle` | Hardcoded GLSL triangle, color interpolated over time | ESC to quit |
+| `02_texture` | EBO rectangle + container texture | ESC to quit |
+| `03_cube` | Rotating textured cube, depth testing | WASD, Q/E, mouse, scroll wheel, ESC |
+| `04_shader_library` | ShaderLibrary + RenderCommand | ESC to quit |
+| `05_lighting` | OBJ torus, checker texture, Material, directional + point lights, MSAA | WASD, Q/E, mouse, scroll wheel, ESC |
+| `06_text` | 3D scene + real-time text overlay (FPS/resolution/MSAA/backend) | WASD, Q/E, mouse, scroll wheel, T hides text, ESC |
+| `07_backend_switch` | Runtime OpenGL ↔ Null backend switching and draw statistics | B switches backend, P prints stats, ESC to quit |
+| `08_postprocess` | Scene renders to an offscreen FBO, passes through the Gray / Invert / Blur / Edge post-processing chain, then goes through `hdr_output.frag` for final output | 1 off / 2 Gray / 3 Invert / 4 Edge / 5 Blur / 6 Gray+Edge, WASD/QE, mouse, ESC |
+| `09_shadow` | Directional light shadow map (orthographic light space, 3×3 PCF, bias scaling); the scene is written to an offscreen FBO and then output in a single pass | WASD/QE, mouse, scroll wheel, `[` `]` bias, F6 PCF, ESC |
+| `10_skybox` | Cubemap skybox + environment reflection/refraction + directional shadows, final output through `hdr_output.frag` | WASD/QE, mouse, 1–6 post-processing, F6 PCF, F7 refraction, `-` `=` reflectance, ESC |
+| `11_hdr` | RGBA16F scene, Reinhard tone mapping, half-resolution bloom, switchable HDR/LDR | F8 HDR/LDR, F9 bloom, 1–6 post-processing, F6 PCF, F7 refraction, `[` `]`, ESC |
+| `12_pbr` | Cook-Torrance PBR, 1 directional light + 4 point lights, 7×5 metallic/roughness sphere grid, diffuse IBL | 1–6 post-processing, L Lambert-only, F6 pauses point-light rotation, F7 IBL, F8 HDR/LDR, F9 bloom, `[` `]` bias, ESC |
+| `13_rose` | Procedural rose: 48 thick petals arranged in a golden-angle spiral, sepals/stem/leaves/thorns, directional shadow map, ACES tone mapping | WASD/QE, hold left mouse button or Tab to lock the camera, scroll wheel, SPACE turntable, 1–4 color palettes, ESC |
 
-运行：
+To run:
 
 ```bash
 ./build/01_triangle
@@ -143,193 +150,210 @@ cmake --build build-release -j
 ./build/10_skybox
 ./build/11_hdr
 ./build/12_pbr
+./build/13_rose
 ```
 
-## 新增能力说明
+## New Capabilities
 
 ### MSAA
 
-`Window` 构造函数新增 `int msaaSamples = 4` 参数，`<= 0` 关闭。创建窗口时设置
-`GLFW_SAMPLES`，上下文就绪后启用 `GL_MULTISAMPLE`，并通过 `GL_SAMPLES` 查询实际采样数，
-`GetMSAASamples()` 返回该值（驱动可能降级）。
+The `Window` constructor gained an `int msaaSamples = 4` parameter; `<= 0` disables MSAA. Window creation sets
+`GLFW_SAMPLES`, `GL_MULTISAMPLE` is enabled once the context is ready, and the actual sample count is queried through
+`GL_SAMPLES`; `GetMSAASamples()` returns that value (drivers may downgrade it).
 
-### 相机缩放与升降
+### Camera Zoom and Elevation
 
-`CameraMovement` 新增 `Up` / `Down`；`ProcessMouseScroll(float)` 把 FOV 限制在 `[1°, 45°]`，
-`GetZoom()` 读取当前 FOV。`Window` 新增 `SetScrollCallback`。
+`CameraMovement` gained `Up` / `Down`; `ProcessMouseScroll(float)` clamps the FOV to `[1°, 45°]`,
+and `GetZoom()` reads the current FOV. `Window` gained `SetScrollCallback`.
 
-### 光照与材质
+### Lighting and Materials
 
-`Lighting.h` 提供三个值类型：
+`Lighting.h` provides three value types:
 
-- `Material`：ambient / diffuse / specular / shininess，`Apply(Shader&)`
-- `DirectionalLight`：方向、三种颜色，`Apply(Shader&)`
-- `PointLight`：位置、距离衰减系数、三种颜色，`Apply(Shader&)`
+- `Material`: ambient / diffuse / specular / shininess, `Apply(Shader&)`
+- `DirectionalLight`: direction and three colors, `Apply(Shader&)`
+- `PointLight`: position, distance attenuation coefficients, three colors, `Apply(Shader&)`
 
-`assets/shaders/lighting.vert/.frag` 使用 Blinn-Phong，支持法线矩阵、方向光、点光与漫反射贴图。
+`assets/shaders/lighting.vert/.frag` use Blinn-Phong, with normal matrix support, directional and point lights, and a diffuse texture.
 
-### 模型导入
+### Model Import
 
-`Model` 解析 Wavefront OBJ 的 `v` / `vt` / `vn` / `f`：
+`Model` parses the `v` / `vt` / `vn` / `f` records of a Wavefront OBJ:
 
-- 多边形按扇形三角化
-- 支持负索引
-- 缺省法线时按面积加权计算平滑法线
-- 每个 `Model` 持有一个或多个 `Mesh`
+- Polygons are triangulated as fans
+- Negative indices are supported
+- When normals are missing, smooth normals are computed with area weighting
+- Each `Model` owns one or more `Mesh`es
 
-明确不解析 `.mtl`、纹理引用、材质组与骨骼动画。
+Explicitly not parsed: `.mtl` files, texture references, material groups and skeletal animation.
 
-### 文字
+### Text
 
-`TextRenderer::Draw(text, x, y, scale, color, viewportWidth, viewportHeight)`：
+`TextRenderer::Draw(text, x, y, scale, color, viewportWidth, viewportHeight)`:
 
-- 使用 `stb_easy_font`，ASCII 点阵四边形，无需外部字体文件
-- y 轴向下的屏幕空间正交投影，坐标为像素
-- 绘制时临时关闭深度测试，结束后恢复
-- 顶点为 `(vec3 pos, vec4 color)`，动态上传
+- Uses `stb_easy_font`: ASCII bitmap quads, no external font files needed
+- Screen-space orthographic projection with y pointing down, coordinates in pixels
+- Depth testing is disabled for the duration of the draw and restored afterwards
+- Vertices are `(vec3 pos, vec4 color)`, uploaded dynamically
 
-### 运行时多后端
+### Runtime Multi-Backend
 
-`Renderer` 内部持有 `std::unique_ptr<RendererAPI>`，`SetBackend(RendererBackend::OpenGL / Null)`
-可在运行中切换；`GetStats()` 返回当前后端的 clear/draw/index/vertex 计数，
-切换时旧后端统计会写入日志。
+`Renderer` holds a `std::unique_ptr<RendererAPI>` internally; `SetBackend(RendererBackend::OpenGL / Null)`
+switches backends at runtime, and `GetStats()` returns the clear/draw/index/vertex counters of the current backend.
+When switching, the old backend's statistics are written to the log.
 
-- **OpenGL 后端**：真实执行 GL 命令，所有调用仍经 `GLCall`
-- **Null 后端**：不发出任何 GL 命令，只校验资源句柄并累计统计，用于无头/基准路径验证
+- **OpenGL backend**: executes real GL commands, still routed through `GLCall`
+- **Null backend**: emits no GL commands at all; it only validates resource handles and accumulates statistics, for headless/benchmark path validation
 
-这是**命令级**后端抽象：VAO/VBO/Texture 等资源类仍由 OpenGL 具体类型持有；
-若要支持 Vulkan/Metal，需要再抽象一层 GPU 资源接口。示例 `07_backend_switch` 演示运行时切换。
+This is a **command-level** backend abstraction: resource classes such as VAO/VBO/Texture are still owned by concrete OpenGL types.
+Supporting Vulkan/Metal would require another layer of GPU resource interfaces. The `07_backend_switch` example demonstrates runtime switching.
 
-### 离屏渲染与后处理
+### Offscreen Rendering and Post-Processing
 
-`Framebuffer(width, height, hdr, sRGBColorSpace)` 创建一个颜色纹理附件 + 深度/模板
-renderbuffer；颜色格式按参数选择 `GL_RGB8`、`GL_SRGB8` 或 `GL_RGBA16F`，移动赋值会先释放
-旧附件。`Resize()` 重建附件，`GetColorAttachmentID()` 返回可供采样的颜色纹理。
+`Framebuffer(width, height, hdr, sRGBColorSpace)` creates one color texture attachment plus a depth/stencil
+renderbuffer; the color format is selected from `GL_RGB8`, `GL_SRGB8` or `GL_RGBA16F` according to the parameters, and
+move assignment releases the old attachments first. `Resize()` rebuilds the attachments, and `GetColorAttachmentID()` returns the color texture available for sampling.
 
-`PostProcess` 封装「场景 FBO → 效果链 ping-pong → 最终纹理」：
+`PostProcess` encapsulates "scene FBO → ping-pong effect chain → final texture":
 
-- `BeginScene()` / `EndScene()` 绑定与解绑场景 FBO
-- `AddEffect(name, shader)` 按添加顺序执行；`SetEffectEnabled(name, bool)` 单独启停
-- 每个效果由一个全屏三角/四边形 pass 完成，颜色在两张 ping-pong FBO 间交替
-- `Render()` 返回效果链最后一张颜色纹理
-- `SetHDRScene(bool)` 在 RGB8 与 RGBA16F 场景目标间切换
-- `SetOutputTransform(shader, useHDR)` 记录最终输出阶段使用的 shader 与 `u_UseHDR`
+- `BeginScene()` / `EndScene()` bind and unbind the scene FBO
+- `AddEffect(name, shader)` runs effects in the order they were added; `SetEffectEnabled(name, bool)` toggles each one individually
+- Each effect is a full-screen triangle/quad pass, with color alternating between two ping-pong FBOs
+- `Render()` returns the last color texture in the effect chain
+- `SetHDRScene(bool)` switches the scene target between RGB8 and RGBA16F
+- `SetOutputTransform(shader, useHDR)` records the shader and `u_UseHDR` used by the final output stage
 
-### 阴影贴图
+### Shadow Maps
 
-`ShadowMap(resolution)` 建立只含深度附件的 FBO（默认 2048²），`GetDepthTexture()` 提供给
-光照 shader 采样。示例中的做法：
+`ShadowMap(resolution)` creates an FBO containing only a depth attachment (2048² by default); `GetDepthTexture()` provides it
+for sampling in the lighting shader. The examples proceed as follows:
 
-- 用方向光方向构造正交光空间矩阵 `projection * lookAt`
-- `BeginWrite(matrix)` 只清深度并绘制所有投影体
-- `EndWrite(w, h)` 恢复默认帧缓冲与视口
-- 光照 shader 中比较当前片元与阴影贴图深度；`u_BiasScale` 控制偏移，`u_UsePCF` 开启 3×3
-  PCF。阴影因子只作用于方向光的直接光照，点光与 ambient 不受影响
+- Build an orthographic light-space matrix from the directional light direction: `projection * lookAt`
+- `BeginWrite(matrix)` clears only the depth buffer and draws all shadow casters
+- `EndWrite(w, h)` restores the default framebuffer and viewport
+- The lighting shader compares each fragment against the shadow map depth; `u_BiasScale` controls the offset and `u_UsePCF` enables 3×3
+  PCF. The shadow factor only affects the directional light's direct term; point lights and ambient are untouched
 
-### HDR 与色调映射
+### HDR and Tone Mapping
 
-**sRGB 纹理约定**：`Texture` 与 `Cubemap` 上传时使用 `GL_SRGB8` / `GL_SRGB8_ALPHA8`
-内部格式。GPU 在采样时自动解码到线性空间，因此光照计算全部在线性空间进行；
-渲染目标与默认帧缓冲都是线性 8 位格式，**不会**自动编码。
+**sRGB texture convention**: `Texture` and `Cubemap` upload with `GL_SRGB8` / `GL_SRGB8_ALPHA8`
+internal formats. The GPU decodes them to linear space automatically when sampling, so all lighting math happens in linear space;
+render targets and the default framebuffer are linear 8-bit formats and do **not** encode automatically.
 
-**HDR 场景**：`Framebuffer(hdr=true)` 使用 `GL_RGBA16F`，保留大于 1.0 的高光值；
-`PostProcess::SetHDRScene(true)` 会把场景与 ping-pong 目标一起切到 RGBA16F。
+**HDR scene**: `Framebuffer(hdr=true)` uses `GL_RGBA16F`, preserving highlight values above 1.0;
+`PostProcess::SetHDRScene(true)` switches both the scene and the ping-pong targets to RGBA16F.
 
-**单次 gamma 编码**：最终输出统一经过 `assets/shaders/hdr_output.frag`：
+**Single gamma encode**: final output always goes through `assets/shaders/hdr_output.frag`:
 
-1. HDR 路径（`u_UseHDR = 1`）：可选叠加 Bloom → Reinhard `c / (c + 1)` 压缩 → `pow(1/2.2)`；
-2. LDR 直通路径（`u_UseHDR = 0`）：默认原样输出；`u_EncodeLDR = 1` 时执行同样的
-   `pow(1/2.2)` 编码，供没有 HDR 链的旧示例（08/09/10）把线性场景目标转换到显示空间。
+1. HDR path (`u_UseHDR = 1`): optional bloom → Reinhard `c / (c + 1)` compression → `pow(1/2.2)`;
+2. LDR passthrough path (`u_UseHDR = 0`): outputs unchanged by default; with `u_EncodeLDR = 1` it applies the same
+   `pow(1/2.2)` encoding, so older examples without an HDR chain (08/09/10) can convert their linear scene targets to display space.
 
-整帧只有这一处 `pow(1/2.2)`，避免重复编码导致画面发灰。
+This is the only `pow(1/2.2)` in the whole frame, avoiding the washed-out look caused by double encoding.
 
-**Bloom**：`hdr_bright.frag` 以阈值 1.0 提取亮部并输出到半分辨率目标，
-`hdr_blur.frag` 做 9 次采样的可分离高斯模糊（先水平后垂直），
-`hdr_output.frag` 在色调映射前按 `u_BloomStrength` 叠加。
+**Bloom**: `hdr_bright.frag` extracts highlights above a threshold of 1.0 into a half-resolution target;
+`hdr_blur.frag` performs a 9-tap separable Gaussian blur (horizontal, then vertical);
+`hdr_output.frag` adds it before tone mapping according to `u_BloomStrength`.
 
-### PBR 与 IBL
+### PBR and IBL
 
-`assets/shaders/pbr.frag` 实现 Cook-Torrance 直接光照：
+`assets/shaders/pbr.frag` implements Cook-Torrance direct lighting:
 
-- **D**：Trowbridge-Reitz / GGX 法线分布
-- **G**：Smith 几何项，Schlick-GGX 近似，`k = (roughness + 1)² / 8`
-- **F**：Schlick Fresnel
-- `kS = F`，`kD = (1 - kS) * (1 - metallic)`，`F0 = mix(0.04, albedo, metallic)`
+- **D**: Trowbridge-Reitz / GGX normal distribution
+- **G**: Smith geometry term with the Schlick-GGX approximation, `k = (roughness + 1)² / 8`
+- **F**: Schlick Fresnel
+- `kS = F`, `kD = (1 - kS) * (1 - metallic)`, `F0 = mix(0.04, albedo, metallic)`
 
-多光源在同一次 pass 内累加：1 个方向光 + 最多 8 个点光。点光使用平方反比衰减，并乘上
-`(1 - (d / radius)⁴)²` 的平滑截断窗，避免半径边缘硬切。阴影因子只乘到方向光项。
+All lights are accumulated in a single pass: 1 directional light + up to 8 point lights. Point lights use inverse-square falloff multiplied by a
+smooth cutoff window `(1 - (d / radius)⁴)²` to avoid a hard edge at the radius. The shadow factor is applied only to the directional term.
 
-环境项默认为常量 `u_AmbientColor`；开启 `u_UseIBL` 时改为采样漫反射辐照度立方体贴图
-`u_IrradianceMap`（`texture(u_IrradianceMap, N)`）。该贴图为 32×32×6、从天空盒按余弦加权
-半球积分预计算，保存在 `assets/textures/irradiance/`，运行时不需要计算。
+The ambient term defaults to the constant `u_AmbientColor`; with `u_UseIBL` enabled it instead samples the diffuse irradiance cubemap
+`u_IrradianceMap` (`texture(u_IrradianceMap, N)`). That map is 32×32×6, precomputed from the skybox by a cosine-weighted
+hemisphere integral and stored in `assets/textures/irradiance/`, so nothing is computed at runtime.
 
-`12_pbr` 生成 7 列 × 5 行的 UV 球阵：列方向 metallic 从 0 递增到 1，行方向 roughness 从
-0.05 递增到 1，可直观看到高光由锐利到粗糙、金属反射由暗到亮的过渡。
+`12_pbr` generates a 7-column × 5-row UV sphere grid: metallic increases from 0 to 1 across the columns, and roughness increases from
+0.05 to 1 down the rows, making the transition from sharp to rough highlights and from dark to bright metal reflections easy to see.
 
-## 自检清单
+### Procedural Rose (13_rose)
 
-- [x] 所有 GL 对象析构释放：Shader、VBO、EBO、VAO、Texture、Cubemap、Framebuffer、
-      ShadowMap、TextRenderer 均实现析构
-- [x] 拷贝构造/赋值已 `= delete`，移动构造/赋值保留（Window/Shader/Buffer/VAO/Texture/
-      Cubemap/Framebuffer/ShadowMap/Mesh/Model/TextRenderer）
-- [x] 移动赋值先释放旧 GL 附件再接管新句柄，不产生泄漏（Framebuffer / ShadowMap）
-- [x] 着色器编译/链接失败抛出 `std::runtime_error`，包含 VERTEX/FRAGMENT/LINK 与完整 info log
-- [x] 全部 GL 调用经 `GLCall`（引擎模块与 12 个示例一致）
-- [x] sRGB 纹理只在采样时解码一次，整帧只在 `hdr_output.frag` 做一次线性 → sRGB 编码
-- [x] 场景 FBO / ping-pong FBO / 阴影 FBO 尺寸变化时正确重建（`Resize` 回调）
-- [x] 多后端切换会记录旧后端统计并重新初始化新后端
-- [x] Debug 全量构建（`-Wall -Wextra`）引擎与示例零警告
-- [x] 示例 01–12 在 macOS 上全部启动、运行、键位响应正常，无 GL 错误、无 "Uniform not found"
-- [x] 08/09/10 补最终输出 pass 后观感恢复；11/12 代码零改动、行为不变
+All geometry in `13_rose` is generated at startup from parametric surfaces; no models or textures are used:
 
-## 验证记录
+- **Petals**: each petal is a parametric surface with an elliptical outline. 48 petals are arranged along a 137.5° golden-angle
+  spiral, growing larger, tilting further outward and drooping more at the tip toward the outside, so the petals overlap in layers.
+  Petals are not zero-thickness sheets: each is a **thin shell** built by offsetting front and back layers along the normal
+  and sealing the rim, so the edges carry a soft highlight band instead of a hard "paper-fold" crease.
+- **Flower center**: inner petals are smaller and cup more deeply, curling toward the center; an ellipsoid bud sits at the very center
+  so the core never becomes a black hole.
+- **Lighting**: a 2048² directional shadow map (5×5 PCF + slope-scaled bias) makes stacked petals occlude each other convincingly;
+  petals use wrapped diffuse, Fresnel rim light, tinted specular and a back-lit translucency approximation, with ACES tone mapping on output.
+- **Controls**: the mouse is not captured by default — **hold the left button and drag** to look around; `Tab` toggles
+  between "free cursor / locked look"; `1`–`4` switch between the Crimson / Blush / Ivory / Burgundy palettes, and `SPACE` toggles the turntable.
 
-- **macOS（Apple M4，OpenGL 4.1 Metal，MSAA 4x）**：最终验收中逐项运行 01–12。
-  01/02/04 画面与贴图正常；03 立方体旋转与相机漫游正常；05 光照/材质/点光与阶段 11 前一致；
-  06 文字叠加层显示 FPS/分辨率/MSAA/后端；07 用模拟按键验证 `OpenGL → Null → OpenGL` 切换与统计；
-  08 的 1–6 效果切换全部生效，默认直通画面亮度正常；09 的 `[` `]` bias 与 F6 PCF 生效，
-  黑白棋盘对比度恢复；10 天空盒无接缝、反射/折射与后处理键位正常，天空亮度与灰蓝/暖色
-  层次恢复（与阶段 10 验收截图一致）；11 的 F8 HDR/LDR、F9 Bloom 与 1–6 后处理正常；
-  12 的球阵、多光源、L/F6/F7/F8/F9 全部正常。运行期间无 `GL_INVALID_*` 中断，
-  无 "Uniform not found" 警告。
-- **Ubuntu 22.04.5（GCC 11.4.0，Xwayland + Mesa 23.2.1 llvmpipe / LLVM 15.0.7，
-  OpenGL 4.5 Core，MSAA 4x）**：最终验收实机复跑，01–12 全部 Debug 构建通过并逐个启动
-  运行，日志无 `GL_INVALID_*` 中断、无 "Uniform not found"；01–07 沿用前序阶段的画面
-  验证，08–12 本次逐一截图核对：08 默认直通立方体、09 黑白棋盘高对比 + 投影、10 天空盒
-  + 环面环境反射、11 HDR/Bloom、12 PBR 金属/粗糙度球阵与多光源，结果与 macOS 一致。
-  键位路径已在 macOS 逐项验证；Ubuntu 未安装 xdotool，未做按键注入。
-  构建中发现 GCC 拒绝与类型同名的成员（`EffectEntry::Shader`），已将成员重命名为
-  `Program`（纯重命名，行为不变），macOS 侧改后重新构建并复跑 08/10/11/12 正常。
-  注：GLFW 3.4 在 Wayland 会话下默认创建原生 Wayland 窗口，截图时以
-  `WAYLAND_DISPLAY=wayland-missing` 强制 X11/Xwayland 以便 `xwininfo` / `xwd` 定位窗口。
+## Self-Check List
 
-## 明确未实现
+- [x] Every GL object is released in its destructor: Shader, VBO, EBO, VAO, Texture, Cubemap, Framebuffer,
+      ShadowMap and TextRenderer all implement destructors
+- [x] Copy construction/assignment are `= delete`; move construction/assignment are kept (Window/Shader/Buffer/VAO/Texture/
+      Cubemap/Framebuffer/ShadowMap/Mesh/Model/TextRenderer)
+- [x] Move assignment releases old GL attachments before taking over the new handles, with no leaks (Framebuffer / ShadowMap)
+- [x] Shader compile/link failures throw `std::runtime_error`, including VERTEX/FRAGMENT/LINK and the full info log
+- [x] All GL calls go through `GLCall` (engine modules and all 13 examples alike)
+- [x] sRGB textures are decoded exactly once at sample time, and the frame is encoded linear → sRGB exactly once in `hdr_output.frag`
+- [x] Scene FBO / ping-pong FBO / shadow FBO are rebuilt correctly when the size changes (`Resize` callback)
+- [x] Backend switching logs the old backend's statistics and reinitializes the new backend
+- [x] Full Debug builds (`-Wall -Wextra`) produce zero warnings for the engine and the examples
+- [x] Examples 01–13 all launch, run and respond to every key on macOS, with no GL errors and no "Uniform not found"
+- [x] 08/09/10 look right again after adding the final output pass; 11/12 are untouched and behave identically
+- [x] 13's thin-shell petals, shadows, palette switching and turntable all run correctly on Apple M4
 
-**渲染技术**
+## Verification Notes
 
-- 法线贴图 / 切线空间、各向异性、clearcoat
-- 镜面 IBL（预滤波环境贴图 + BRDF LUT）
-- 点光源阴影（cube shadow map）、CSM 级联、VSM/EVSM、自阴影优化（正面剔除 / normal offset）
-- 曝光自适应、ACES/Filmic tonemap、Bloom 软 knee 与更好模糊
-- MSAA FBO resolve（场景 FBO 为单采样）、动态环境映射
-- OBJ 的 `.mtl` 材质、外部贴图与多材质分组、骨骼动画
+- **macOS (Apple M4, OpenGL 4.1 Metal, 4x MSAA)**: every item from 01–13 was run during final acceptance.
+  01/02/04 render correctly, textures included; 03's cube rotation and camera roaming work; 05's lighting/materials/point light match the behavior before stage 11;
+  06's text overlay shows FPS/resolution/MSAA/backend; 07 was verified with simulated key presses for `OpenGL → Null → OpenGL` switching and statistics;
+  08's 1–6 effect switching all take effect, and the default passthrough image has correct brightness; 09's `[` `]` bias and F6 PCF work,
+  and the black-and-white checker contrast is restored; 10's skybox is seamless, reflection/refraction and post-processing keys work, and sky brightness and gray-blue/warm
+  layering are restored (matching the stage-10 acceptance screenshots); 11's F8 HDR/LDR, F9 bloom and 1–6 post-processing work;
+  12's sphere grid, multiple lights and L/F6/F7/F8/F9 all work; 13's rose rendering, 1–4 palette switching and
+  SPACE turntable work. No `GL_INVALID_*` breaks and no "Uniform not found" warnings occurred during any run.
+- **Ubuntu 22.04.5 (GCC 11.4.0, Xwayland + Mesa 23.2.1 llvmpipe / LLVM 15.0.7,
+  OpenGL 4.5 Core, 4x MSAA)**: re-run on real hardware for final acceptance; 01–12 all build in Debug and were launched and
+  run one by one, with no `GL_INVALID_*` breaks and no "Uniform not found" in the logs; 01–07 reuse the visual verification from earlier stages,
+  while 08–12 were checked one by one with screenshots this time: 08's default passthrough cube, 09's high-contrast black-and-white checker with shadows, 10's skybox
+  + torus environment reflection, 11's HDR/bloom, and 12's PBR metal/roughness sphere grid with multiple lights — all match macOS.
+  The key paths were verified item by item on macOS; Ubuntu has no xdotool installed, so no key injection was performed.
+  During the build GCC rejected a member with the same name as its type (`EffectEntry::Shader`); the member was renamed to
+  `Program` (a pure rename, no behavior change), and the macOS build was rebuilt and 08/10/11/12 re-run successfully afterwards.
+  Note: under a Wayland session, GLFW 3.4 creates a native Wayland window by default; screenshots used
+  `WAYLAND_DISPLAY=wayland-missing` to force X11/Xwayland so that `xwininfo` / `xwd` could locate the window.
 
-**工程**
+## Explicitly Not Implemented
 
-- 资源管理器 / 热重载、场景图 / ECS、编辑器
-- Null 后端不是 GPU 无关的资源抽象，仍依赖已创建的 OpenGL 句柄
-- 文字叠加层直接使用 OpenGL 绘制（调试 UI），不经过 `RendererAPI`
+**Rendering techniques**
 
-**其他**
+- Normal mapping / tangent space, anisotropy, clearcoat
+- Specular IBL (prefiltered environment map + BRDF LUT)
+- Point light shadows (cube shadow maps), CSM cascades, VSM/EVSM, self-shadow optimizations (front-face culling / normal offset)
+- Auto-exposure, ACES/Filmic tonemap, bloom soft knee and better blur
+- MSAA FBO resolve (scene FBOs are single-sampled), dynamic environment mapping
+- OBJ `.mtl` materials, external textures and multi-material groups, skeletal animation
 
-- 非 ASCII 文字、字体图集、文本换行与布局
-- 音频、物理
-- 未引入 boost / Qt / assimp 等约定外第三方库
+**Engineering**
 
-## 第三方组件
+- Resource manager / hot reload, scene graph / ECS, editor
+- The Null backend is not a GPU-agnostic resource abstraction; it still depends on already-created OpenGL handles
+- The text overlay draws directly with OpenGL (debug UI) and does not go through `RendererAPI`
 
-项目使用 GLFW、glm、glad、stb 等第三方库；各库许可证见其源码目录或文件头。
+**Other**
+
+- Non-ASCII text, font atlases, text wrapping and layout
+- Audio, physics
+- No third-party libraries outside the agreed set (boost / Qt / assimp etc. are not used)
+
+## Third-Party Components
+
+The project uses third-party libraries such as GLFW, glm, glad and stb; see each library's source directory or file headers for its license.
 
 ## License
 
-本项目采用 [MIT License](LICENSE) 发布。
+This project is released under the [MIT License](LICENSE).
