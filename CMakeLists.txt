@@ -118,3 +118,6 @@ target_link_libraries(11_hdr PRIVATE engine)
 
 add_executable(12_pbr engine/examples/12_pbr/main.cpp)
 target_link_libraries(12_pbr PRIVATE engine)
+
+add_executable(13_rose engine/examples/13_rose/main.cpp)
+target_link_libraries(13_rose PRIVATE engine)
