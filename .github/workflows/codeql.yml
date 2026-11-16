@@ -40,7 +40,7 @@ jobs:
 
       - name: Build for CodeQL
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DGLFW_BUILD_WAYLAND=OFF
           cmake --build build -j"$(nproc)"
 
       - uses: github/codeql-action/analyze@v3
