@@ -28,5 +28,11 @@ CMakeUserPresets.json
 *.dll
 *.exe
 
+# Coverage output
+*.gcda
+*.gcno
+*.gcov
+coverage.json
+
 # Keep Wavefront OBJ models (the .obj extension collides with Windows objects)
 !assets/models/*.obj

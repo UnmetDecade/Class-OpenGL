@@ -2,6 +2,8 @@
 
 <div align="left"><b>English</b> · <a href="README.zh-CN.md">简体中文</a></div>
 
+[![CI](https://github.com/UnmetDecade/Class-OpenGL/actions/workflows/ci.yml/badge.svg)](https://github.com/UnmetDecade/Class-OpenGL/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/UnmetDecade/Class-OpenGL/actions/workflows/codeql.yml/badge.svg)](https://github.com/UnmetDecade/Class-OpenGL/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A rendering engine skeleton built around C++17 and OpenGL 3.3 Core Profile.
@@ -63,7 +65,7 @@ every GL call is wrapped in `GLCall`, which in Debug builds prints `file:line ca
 | Backends | `RendererAPI.h`, `OpenGLRendererAPI.*`, `NullRendererAPI.*` | Real OpenGL backend + headless Null backend |
 | Lighting/materials | `Lighting.h` | Blinn-Phong, Material, directional light, point light |
 | PBR materials | `MaterialPBR.h` | albedo / metallic / roughness / AO, `Apply(Shader&)` |
-| Mesh/model | `Mesh.*`, `Model.*` | Indexed meshes, Wavefront OBJ import, UV sphere generation |
+| Mesh/model | `Mesh.*`, `Model.*`, `ObjLoader.*`, `Vertex.h` | Indexed meshes, headless Wavefront OBJ parsing, UV sphere generation |
 | Text | `TextRenderer.*` | stb_easy_font screen-space ASCII overlay |
 | Shader library | `ShaderLibrary.*` | Single-file `#type vertex` / `#type fragment` management |
 | Offscreen rendering | `Framebuffer.*` | Color attachment + depth/stencil renderbuffer, supports RGB8 / sRGB8 / RGBA16F |
@@ -93,7 +95,10 @@ Class-OpenGL/
 ├── third_party/
 │   ├── glad/              # pre-generated OpenGL 3.3 Core loader
 │   └── stb/               # stb_image / stb_easy_font
-└── docs/images/           # README screenshots
+├── tests/                 # headless unit tests (CTest)
+├── scripts/               # coverage and docs link checks
+├── docs/                  # screenshots and GitHub Pages landing page
+└── .github/               # CI, CodeQL, Dependabot, issue and PR templates
 ```
 
 ## Building
@@ -106,6 +111,7 @@ git clone https://github.com/UnmetDecade/Class-OpenGL.git
 cd Class-OpenGL
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build -j
+ctest --test-dir build --output-on-failure
 ```
 
 Release build (with GLCall checks disabled):
@@ -178,7 +184,8 @@ and `GetZoom()` reads the current FOV. `Window` gained `SetScrollCallback`.
 
 ### Model Import
 
-`Model` parses the `v` / `vt` / `vn` / `f` records of a Wavefront OBJ:
+`ObjLoader` parses the `v` / `vt` / `vn` / `f` records of a Wavefront OBJ without any GL
+dependency; `Model` then uploads the resulting vertices and indices into a `Mesh`:
 
 - Polygons are triangulated as fans
 - Negative indices are supported
@@ -301,7 +308,8 @@ All geometry in `13_rose` is generated at startup from parametric surfaces; no m
 - [x] sRGB textures are decoded exactly once at sample time, and the frame is encoded linear → sRGB exactly once in `hdr_output.frag`
 - [x] Scene FBO / ping-pong FBO / shadow FBO are rebuilt correctly when the size changes (`Resize` callback)
 - [x] Backend switching logs the old backend's statistics and reinitializes the new backend
-- [x] Full Debug builds (`-Wall -Wextra`) produce zero warnings for the engine and the examples
+- [x] Full Debug builds (`-Wall -Wextra`, promoted to errors in CI) produce zero warnings for the engine and the examples
+- [x] Headless unit tests for `Camera` and `ObjLoader` run under CTest, with a coverage gate enforced in CI
 - [x] Examples 01–13 all launch, run and respond to every key on macOS, with no GL errors and no "Uniform not found"
 - [x] 08/09/10 look right again after adding the final output pass; 11/12 are untouched and behave identically
 - [x] 13's thin-shell petals, shadows, palette switching and turntable all run correctly on Apple M4
@@ -353,6 +361,14 @@ All geometry in `13_rose` is generated at startup from parametric surfaces; no m
 ## Third-Party Components
 
 The project uses third-party libraries such as GLFW, glm, glad and stb; see each library's source directory or file headers for its license.
+
+## Contributing
+
+Contribution guidelines, coding conventions and the PR checklist live in
+[CONTRIBUTING.md](CONTRIBUTING.md). Please report vulnerabilities privately per
+[SECURITY.md](SECURITY.md), and follow the
+[Code of Conduct](CODE_OF_CONDUCT.md). User-visible changes are tracked in
+[CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

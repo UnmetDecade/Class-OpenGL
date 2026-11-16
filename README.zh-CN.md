@@ -2,6 +2,8 @@
 
 <div align="left"><a href="README.md">English</a> · <b>简体中文</b></div>
 
+[![CI](https://github.com/UnmetDecade/Class-OpenGL/actions/workflows/ci.yml/badge.svg)](https://github.com/UnmetDecade/Class-OpenGL/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/UnmetDecade/Class-OpenGL/actions/workflows/codeql.yml/badge.svg)](https://github.com/UnmetDecade/Class-OpenGL/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 一个 C++17 / OpenGL 3.3 Core Profile 的渲染引擎封装骨架。
@@ -63,7 +65,7 @@
 | 后端 | `RendererAPI.h`、`OpenGLRendererAPI.*`、`NullRendererAPI.*` | OpenGL 实际后端 + Null 无头后端 |
 | 光照/材质 | `Lighting.h` | Blinn-Phong、Material、方向光、点光 |
 | PBR 材质 | `MaterialPBR.h` | albedo / metallic / roughness / AO，`Apply(Shader&)` |
-| 网格/模型 | `Mesh.*`、`Model.*` | 索引网格、Wavefront OBJ 导入、UV 球体生成 |
+| 网格/模型 | `Mesh.*`、`Model.*`、`ObjLoader.*`、`Vertex.h` | 索引网格、无窗口 Wavefront OBJ 解析、UV 球体生成 |
 | 文字 | `TextRenderer.*` | stb_easy_font 屏幕空间 ASCII 叠加层 |
 | Shader 库 | `ShaderLibrary.*` | 单文件 `#type vertex` / `#type fragment` 管理 |
 | 离屏渲染 | `Framebuffer.*` | 颜色附件 + 深度/模板 renderbuffer，支持 RGB8 / sRGB8 / RGBA16F |
@@ -93,7 +95,10 @@ Class-OpenGL/
 ├── third_party/
 │   ├── glad/              # 预生成的 OpenGL 3.3 Core loader
 │   └── stb/               # stb_image / stb_easy_font
-└── docs/images/           # README 截图
+├── tests/                 # 无窗口单元测试（CTest）
+├── scripts/               # 覆盖率与文档链接检查脚本
+├── docs/                  # 截图与 GitHub Pages 落地页
+└── .github/               # CI、CodeQL、Dependabot、issue 与 PR 模板
 ```
 
 ## 构建
@@ -106,6 +111,7 @@ git clone https://github.com/UnmetDecade/Class-OpenGL.git
 cd Class-OpenGL
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build -j
+ctest --test-dir build --output-on-failure
 ```
 
 Release 构建（关闭 GLCall 检查）：
@@ -178,7 +184,8 @@ cmake --build build-release -j
 
 ### 模型导入
 
-`Model` 解析 Wavefront OBJ 的 `v` / `vt` / `vn` / `f`：
+`ObjLoader` 负责解析 Wavefront OBJ 的 `v` / `vt` / `vn` / `f`，不依赖任何 GL 接口；
+`Model` 再把解析出的顶点与索引上传为 `Mesh`：
 
 - 多边形按扇形三角化
 - 支持负索引
@@ -299,7 +306,8 @@ renderbuffer；颜色格式按参数选择 `GL_RGB8`、`GL_SRGB8` 或 `GL_RGBA16
 - [x] sRGB 纹理只在采样时解码一次，整帧只在 `hdr_output.frag` 做一次线性 → sRGB 编码
 - [x] 场景 FBO / ping-pong FBO / 阴影 FBO 尺寸变化时正确重建（`Resize` 回调）
 - [x] 多后端切换会记录旧后端统计并重新初始化新后端
-- [x] Debug 全量构建（`-Wall -Wextra`）引擎与示例零警告
+- [x] Debug 全量构建（`-Wall -Wextra`，CI 中提升为错误）引擎与示例零警告
+- [x] `Camera` 与 `ObjLoader` 的无窗口单元测试通过 CTest 运行，覆盖率门槛在 CI 强制执行
 - [x] 示例 01–13 在 macOS 上全部启动、运行、键位响应正常，无 GL 错误、无 "Uniform not found"
 - [x] 08/09/10 补最终输出 pass 后观感恢复；11/12 代码零改动、行为不变
 - [x] 13 的薄壳花瓣、阴影、换色与转台在 Apple M4 上运行正常
@@ -351,6 +359,13 @@ renderbuffer；颜色格式按参数选择 `GL_RGB8`、`GL_SRGB8` 或 `GL_RGBA16
 ## 第三方组件
 
 项目使用 GLFW、glm、glad、stb 等第三方库；各库许可证见其源码目录或文件头。
+
+## 参与贡献
+
+贡献方式、代码约定与 PR 检查表见 [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md)。
+安全漏洞请按 [SECURITY.zh-CN.md](SECURITY.zh-CN.md) 私下上报，并遵守
+[行为准则](CODE_OF_CONDUCT.zh-CN.md)。面向用户的变更记录在
+[CHANGELOG.zh-CN.md](CHANGELOG.zh-CN.md)。
 
 ## License
 
